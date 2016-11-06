@@ -32,9 +32,13 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-#if SYSTEM_DRAWING
+#if SYSTEM_DRAWING || __ANDROID__
+#if __ANDROID__
+using Android.Graphics;
+#else
 using System.Drawing;
 using System.Drawing.Imaging;
+#endif
 
 namespace PrimMesher
 {
@@ -78,8 +82,12 @@ namespace PrimMesher
             try
             {
                 if (needsScaling)
+#if __ANDROID__
+                    bm = ScaleImage(bm, width, height);
+#else
                     bm = ScaleImage(bm, width, height,
                         System.Drawing.Drawing2D.InterpolationMode.NearestNeighbor);
+#endif
             }
 
             catch (Exception e)
@@ -107,7 +115,11 @@ namespace PrimMesher
                     {
                         for (int x = 0; x < width; x++)
                         {
+#if __ANDROID__
+                            Color c = new Color(bm.GetPixel(x, y));
+#else
                             Color c = bm.GetPixel(x, y);
+#endif
 
                             redBytes[byteNdx] = c.R;
                             greenBytes[byteNdx] = c.G;
@@ -121,8 +133,13 @@ namespace PrimMesher
                     {
                         for (int x = 0; x <= width; x++)
                         {
+#if __ANDROID__
+                            Color c = new Color(bm.GetPixel(x < width ? x * 2 : x * 2 - 1,
+                                                y < height ? y * 2 : y * 2 - 1));
+#else
                             Color c = bm.GetPixel(x < width ? x * 2 : x * 2 - 1,
                                                 y < height ? y * 2 : y * 2 - 1);
+#endif
 
                             redBytes[byteNdx] = c.R;
                             greenBytes[byteNdx] = c.G;
@@ -173,6 +190,13 @@ namespace PrimMesher
             return rows;
         }
 
+#if __ANDROID__
+        private Bitmap ScaleImage(Bitmap srcImage, int destWidth, int destHeight)
+        {
+            Bitmap scaledImage = Bitmap.CreateScaledBitmap(srcImage, destWidth, destHeight, false);
+            return scaledImage;
+        }
+#else
         private Bitmap ScaleImage(Bitmap srcImage, int destWidth, int destHeight,
                 System.Drawing.Drawing2D.InterpolationMode interpMode)
         {
@@ -190,6 +214,7 @@ namespace PrimMesher
             grPhoto.Dispose();
             return scaledImage;
         }
+#endif
     }
 }
 #endif

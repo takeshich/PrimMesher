@@ -26,7 +26,11 @@
  */
 
 // to build without references to System.Drawing, comment this out
+#if __ANDROID__
+using Android.Graphics;
+#else
 #define SYSTEM_DRAWING
+#endif
 
 using System;
 using System.Collections.Generic;
@@ -174,7 +178,7 @@ namespace PrimMesher
                 calcVertexNormals(SculptType.plane, numXElements, numYElements);
         }
 
-#if SYSTEM_DRAWING
+#if SYSTEM_DRAWING || __ANDROID__
         public SculptMesh(Bitmap sculptBitmap, SculptType sculptType, int lod, bool viewerMode)
         {
             _SculptMesh(sculptBitmap, sculptType, lod, viewerMode, false, false);
@@ -191,7 +195,7 @@ namespace PrimMesher
             _SculptMesh(rows, sculptType, viewerMode, mirror, invert);
         }
 
-#if SYSTEM_DRAWING
+#if SYSTEM_DRAWING || __ANDROID__
         /// <summary>
         /// converts a bitmap to a list of lists of coords, while scaling the image.
         /// the scaling is done in floating point so as to allow for reduced vertex position
@@ -231,11 +235,20 @@ namespace PrimMesher
                     {
                         for (imageY = imageYStart; imageY < imageYEnd; imageY++)
                         {
+#if __ANDROID__
+                            Color c = new Color(bitmap.GetPixel(imageX, imageY));
+#else
                             Color c = bitmap.GetPixel(imageX, imageY);
+#endif
                             if (c.A != 255)
                             {
+#if __ANDROID__
+                                bitmap.SetPixel(imageX, imageY, Color.Argb(255, c.R, c.G, c.B));
+                                c = new Color(bitmap.GetPixel(imageX, imageY));
+#else
                                 bitmap.SetPixel(imageX, imageY, Color.FromArgb(255, c.R, c.G, c.B));
                                 c = bitmap.GetPixel(imageX, imageY);
+#endif
                             }
                             rSum += c.R;
                             gSum += c.G;
@@ -274,12 +287,20 @@ namespace PrimMesher
                 {
                     imageX = colNdx * scale;
                     if (colNdx == numCols) imageX--;
-
+#if __ANDROID__
+                    Color c = new Color(bitmap.GetPixel(imageX, imageY));
+#else
                     Color c = bitmap.GetPixel(imageX, imageY);
+#endif
                     if (c.A != 255)
                     {
+#if __ANDROID__
+                        bitmap.SetPixel(imageX, imageY, Color.Argb(255, c.R, c.G, c.B));
+                        c = new Color(bitmap.GetPixel(imageX, imageY));
+#else
                         bitmap.SetPixel(imageX, imageY, Color.FromArgb(255, c.R, c.G, c.B));
                         c = bitmap.GetPixel(imageX, imageY);
+#endif
                     }
 
                     if (mirror)
@@ -300,7 +321,7 @@ namespace PrimMesher
         }
 #endif
 
-        void _SculptMesh(List<List<Coord>> rows, SculptType sculptType, bool viewerMode, bool mirror, bool invert)
+                        void _SculptMesh(List<List<Coord>> rows, SculptType sculptType, bool viewerMode, bool mirror, bool invert)
         {
             coords = new List<Coord>();
             faces = new List<Face>();
